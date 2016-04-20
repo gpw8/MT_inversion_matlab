@@ -27,50 +27,50 @@ if 1
     
     
     % station F9NE has really large Z on event 6 (20-Jan-2009 03:16:28)
-    % if I leave this in, then it throws off the other indices: 
+    % if I leave this in, then it throws off the other indices:
     peaksind(6)=[];
     
     % QC clear out some others
-
+    
     % if the event 6 from above is removed, use this
     peaksind([1:3,6,10,14,16:18])=[]; %otherwise:
-%     peaksind([1:3,7,11,15,17:19])=[];
+    %     peaksind([1:3,7,11,15,17:19])=[];
     peaksind(2)=[];
     
     %htese are very low amplitude
-     % if the event 6 from above is F9NE removed, use this
-     peaksind([4,8])=[];% otherwise:
-%     peaksind([4,9])=[];
+    % if the event 6 from above is F9NE removed, use this
+    peaksind([4,8])=[];% otherwise:
+    %     peaksind([4,9])=[];
     
     
     % station F9SW has opposite polarity for this one (21-Jan-2009 03:52:58)
- peaksind(7:8)=[];
- % peaksind(8:9)=[];
-% peaksind(6)=[];
-
-% finally, this event has the wrong polarity on F9A Z for BP400-60, but I 
-% think we should keep it in the mix peaksind(5)=[];
-
-
-
-%     % Use these for cutoffxc=2.3
-%         %stationF9C doesn't start until the 17th
-%     peaksind(1:33)=[];
-%         % station SW died on the 21st
-%     peaksind(17:39)=[];
-% 
-%     % station F9A has NaNs for the event on 21-Jan-2009 06:06:22
-%     peaksind(16)=[];
+    peaksind(7:8)=[];
+    % peaksind(8:9)=[];
+    % peaksind(6)=[];
+    
+    % finally, this event has the wrong polarity on F9A Z for BP400-60, but I
+    % think we should keep it in the mix peaksind(5)=[];
+    
+    
+    
+    %     % Use these for cutoffxc=2.3
+    %         %stationF9C doesn't start until the 17th
+    %     peaksind(1:33)=[];
+    %         % station SW died on the 21st
+    %     peaksind(17:39)=[];
+    %
+    %     % station F9A has NaNs for the event on 21-Jan-2009 06:06:22
+    %     peaksind(16)=[];
     
     disp([num2str(length(peaksind)),' events on all stations']);
-
+    
     % Use these for cutoffxc=2.5
     % station SW
-%     peaksind(31:45)=[];
-%     % %stationNW is missing some as well
-%     peaksind(10:22)=[];
-%     %stationF9C
-%     peaksind(1:9)=[];
+    %     peaksind(31:45)=[];
+    %     % %stationNW is missing some as well
+    %     peaksind(10:22)=[];
+    %     %stationF9C
+    %     peaksind(1:9)=[];
     
     % % Use these for cutoffxc=2.6 %6 events
     % % station SW
@@ -261,7 +261,7 @@ if 1
             %         end
             stafile=[stn,'_BP',num2str(1/lc),'-',num2str(1/hc),'.mat'];
             save(stafile,'tmpVLPE','tmpVLPN','tmpVLPZ','lc','hc');
-%             pause
+            %             pause
         end
         %     clear  tmpVLPE tmpVLPN tmpVLPZ
     end
@@ -294,7 +294,7 @@ for mmm=6%1:length(lcall)
         noisestart=sps*101;
     end
     noiseend=noisestart+noiselen;
-
+    
     %
     
     load(sprintf('F900_BP%d-%d.mat',1/lc,1/hc))
@@ -304,7 +304,7 @@ for mmm=6%1:length(lcall)
     % now load and stack each of the other stations
     staall=[{'F9SW'};{'F9NW'};{'F900'};{'F9C'};{'F9B'};{'F9A'};{'F9NE'};{'F9SE'};];
     staall=[{'F9SW'};{'F9NW'};{'F900'};{'F9C'};{'F9B'};{'F9A'};{'F9NE'};];
-
+    
     %     staall=[{'F9SW'};{'F9NW'};{'F900'};{'F9C'};{'F9B'};{'F9A'}];
     %     goodind(1,:)=[ones(1,3),zeros(1,9)]; %F9SW
     %     goodind(2,:)=[ones(1,5),zeros(1,3),ones(1,4)]; %F9NW
@@ -380,11 +380,11 @@ for mmm=6%1:length(lcall)
         stackN50=decimate(stackN,2);
         stackZ50=decimate(stackZ,2);
         
-     
+        
         %         % Here is where we use phase weighted stack
-%                 [pwsE,tvecE] = pwstack(tmpE50',size(tmpE50,2),dt50);
-%                 [pwsN,tvecN] = pwstack(tmpN50',size(tmpN50,2),dt50);
-%                 [pwsZ,tvecZ] = pwstack(tmpZ50',size(tmpZ50,2),dt50);
+        %                 [pwsE,tvecE] = pwstack(tmpE50',size(tmpE50,2),dt50);
+        %                 [pwsN,tvecN] = pwstack(tmpN50',size(tmpN50,2),dt50);
+        %                 [pwsZ,tvecZ] = pwstack(tmpZ50',size(tmpZ50,2),dt50);
         [pwsE] = pws_simple(tmpE50',dt50,round((10)/dt50));
         [pwsN] = pws_simple(tmpN50',dt50,round((10)/dt50));
         [pwsZ] = pws_simple(tmpZ50',dt50,round((10)/dt50));
@@ -398,7 +398,7 @@ for mmm=6%1:length(lcall)
         
         datatd(nt,:) =stackE50';
         datatdpws(nt,:)=pwsE;
-%         DoF(nt,:)=dof(pwsE(noisestart:noiseend))*fd/noiselen;
+        %         DoF(nt,:)=dof(pwsE(noisestart:noiseend))*fd/noiselen;
         % FFT
         tmpfft = fft(datatdpws(nt,:));
         % put in matrix
@@ -406,8 +406,8 @@ for mmm=6%1:length(lcall)
         %NORTH
         datatd(nt+1,:) =stackN50';
         datatdpws(nt+1,:)=pwsN;
-%         DoF(nt+1,:)=dof(pwsN(noisestart:noiseend))*fd/noiselen;
-
+        %         DoF(nt+1,:)=dof(pwsN(noisestart:noiseend))*fd/noiselen;
+        
         % FFT
         tmpfft = fft(datatdpws(nt+1,:));
         % put in matrix
@@ -415,9 +415,9 @@ for mmm=6%1:length(lcall)
         %VERT
         datatd(nt+2,:)= stackZ50';
         datatdpws(nt+2,:)=pwsZ;
-%         DoF(nt+2,:)=dof(pwsZ(noisestart:noiseend))*fd/noiselen;
-
-
+        %         DoF(nt+2,:)=dof(pwsZ(noisestart:noiseend))*fd/noiselen;
+        
+        
         % FFT
         tmpfft = fft(datatdpws(nt+2,:));
         % put in matrix
@@ -452,11 +452,240 @@ for mmm=6%1:length(lcall)
         
         
     end
-%     DoF
+    %     DoF
     savefile=sprintf('PWstack2009BP%d_%d.mat',1/lc,1/hc);
     save(savefile,'data','datatd','datatdpws','staall','sps')
-%     figure
-%     plot(datatd'); title(savefile)
+    %     figure
+    %     plot(datatd'); title(savefile)
 end
 %%
 
+% Adding a new section that pltos the ffts for each band
+clear, close all
+staall=[{'F9SW'};{'F9NW'};{'F900'};{'F9C'};{'F9B'};{'F9A'};{'F9NE'};];
+
+datdir='/Users/gpwaite/Data/Guate/Fuego2009';
+figdir='~/Documents/Papers/Fuego-ULP-VLP';
+dt50=1/50;
+sps=50;
+
+td=2^16;
+fd=td/2;
+fvec=linspace(0,sps,fd);
+
+hcall=[1/60  1/10   1/10   1/10  1/10  1/10];
+lcall=[1/400 1/400, 1/120, 1/60, 1/30, 1/90];
+for mmm=1:length(lcall)
+    lc=lcall(mmm);
+    hc=hcall(mmm);
+    
+    loadfile=sprintf('PWstack2009BP%d_%d.mat',1/lc,1/hc);
+    load([datdir,filesep,loadfile]);
+    nt=1;
+    for stasub=1:length(staall);
+        
+        mxabs(mmm,stasub)=max(max(abs(data(nt:nt+2,:))));
+        nt=nt+3;
+        
+    end
+    
+end
+maxmxabs=max(mxabs);
+%
+for mmm=1:length(lcall)
+    lc=lcall(mmm);
+    hc=hcall(mmm);
+    
+    loadfile=sprintf('PWstack2009BP%d_%d.mat',1/lc,1/hc);
+    load([datdir,filesep,loadfile]);
+    
+    nt=1;
+    for stasub=1:length(staall);
+        sta=staall(stasub);
+        stn=char(sta);
+        disp([' working on ',stn])
+        
+        
+        
+        figure(stasub)
+        %         suptitle2([char(sta),' BP ',num2str(1/lc), ' - ',num2str(1/hc)])
+        subplot(311)
+        semilogx(fvec,abs(data(nt,:))/maxmxabs(stasub))
+        hold on
+        ylabel('E')
+        xlim([0 0.2])
+        ylim([0 1])
+        
+        subplot(312)
+        semilogx(fvec,abs(data(nt+1,:))/maxmxabs(stasub))
+        hold on
+        ylabel('N')
+        xlim([0 0.2])
+        ylim([0 1])
+        
+        
+        subplot(313)
+        semilogx(fvec,abs(data(nt+2,:))/maxmxabs(stasub))
+        hold on
+        ylabel('Z')
+        xlim([0 0.2])
+        ylim([0 1])
+        
+        % add some text to the last plot
+        if mmm==length(lcall)
+            suptitle2(stn);
+            legend(num2str(1./lcall'))
+            drawnow
+            print('-dpsc',[figdir,filesep,'station',stn,'_spectra_PWS_6bands.ps'])
+            
+        end
+        
+        
+        
+        if strcmp(stn,'F900')
+            figure(99)
+            subplot(3,3,1)
+            semilogx(fvec,abs(data(nt,:))/maxmxabs(stasub))
+            hold on
+            ylabel(stn);
+            xlim([0 0.2])
+            ylim([0 1])
+            set(gca,'YTickLabel','');
+            set(gca,'Xtick',[0.01 0.1 1]);
+            tmpx=get(gca,'XTick');
+            set(gca,'XtickLabel',num2str(tmpx'))
+            
+            subplot(3,3,2)
+            semilogx(fvec,abs(data(nt+1,:))/maxmxabs(stasub))
+            hold on
+            %             ylabel('N')
+            xlim([0 0.2])
+            ylim([0 1])
+            set(gca,'YTickLabel','');
+            set(gca,'Xtick',[0.01 0.1 1]);
+            tmpx=get(gca,'XTick');
+            set(gca,'XtickLabel',num2str(tmpx'))
+            
+            
+            subplot(3,3,3)
+            semilogx(fvec,abs(data(nt+2,:))/maxmxabs(stasub))
+            hold on
+            %             ylabel('Z')
+            xlim([0 0.2])
+            ylim([0 1])
+            set(gca,'YTickLabel','');
+            set(gca,'Xtick',[0.01 0.1 1]);
+            tmpx=get(gca,'XTick');
+            set(gca,'XtickLabel',num2str(tmpx'))
+            
+            
+        elseif strcmp(stn,'F9NW')
+            figure(99)
+            subplot(3,3,4)
+            semilogx(fvec,abs(data(nt,:))/maxmxabs(stasub))
+            hold on
+            ylabel(stn);
+            xlim([0 0.2])
+            ylim([0 1])
+            set(gca,'YTickLabel','');
+            set(gca,'Xtick',[0.01 0.1 1]);
+            tmpx=get(gca,'XTick');
+            set(gca,'XtickLabel',num2str(tmpx'))
+            
+            subplot(3,3,5)
+            semilogx(fvec,abs(data(nt+1,:))/maxmxabs(stasub))
+            hold on
+            %             ylabel('N')
+            xlim([0 0.2])
+            ylim([0 1])
+            set(gca,'YTickLabel','');
+            set(gca,'Xtick',[0.01 0.1 1]);
+            tmpx=get(gca,'XTick');
+            set(gca,'XtickLabel',num2str(tmpx'))
+            
+            
+            subplot(3,3,6)
+            semilogx(fvec,abs(data(nt+2,:))/maxmxabs(stasub))
+            hold on
+            %             ylabel('Z')
+            xlim([0 0.2])
+            ylim([0 1])
+            set(gca,'YTickLabel','');
+            set(gca,'Xtick',[0.01 0.1 1]);
+            tmpx=get(gca,'XTick');
+            set(gca,'XtickLabel',num2str(tmpx'))
+            
+            
+            %         elseif strcmp(stn,'F9B')
+            %             figure(99)
+            %             subplot(4,3,7)
+            %             semilogx(fvec,abs(data(nt,:))/maxmxabs(stasub))
+            %             hold on
+            %             ylabel(stn);
+            %             xlim([0 1])
+            %
+            %             subplot(4,3,8)
+            %             semilogx(fvec,abs(data(nt+1,:))/maxmxabs(stasub))
+            %             hold on
+            %             %             ylabel('N')
+            %             xlim([0 1])
+            %
+            %
+            %             subplot(4,3,9)
+            %             semilogx(fvec,abs(data(nt+2,:))/maxmxabs(stasub))
+            %             hold on
+            %             %             ylabel('Z')
+            %             xlim([0 1])
+            %
+            
+        elseif strcmp(stn,'F9SW')
+            figure(99)
+            subplot(3,3,7)
+            semilogx(fvec,abs(data(nt,:))/maxmxabs(stasub))
+            hold on
+            ylabel(stn);
+            xlim([0 0.2])
+            ylim([0 1])
+            set(gca,'YTickLabel','');
+            set(gca,'Xtick',[0.01 0.1 1]);
+            tmpx=get(gca,'XTick');
+            set(gca,'XtickLabel',num2str(tmpx'))
+            
+            subplot(3,3,8)
+            semilogx(fvec,abs(data(nt+1,:))/maxmxabs(stasub))
+            hold on
+            %             ylabel('N')
+            xlim([0 0.2])
+            ylim([0 1])
+            set(gca,'YTickLabel','');
+            set(gca,'Xtick',[0.01 0.1 1]);
+            tmpx=get(gca,'XTick');
+            set(gca,'XtickLabel',num2str(tmpx'))
+            
+            
+            subplot(3,3,9)
+            semilogx(fvec,abs(data(nt+2,:))/maxmxabs(stasub))
+            hold on
+            %             ylabel('Z')
+            xlim([0 0.2])
+            ylim([0 1])
+            set(gca,'YTickLabel','');
+            set(gca,'Xtick',[0.01 0.1 1]);
+            tmpx=get(gca,'XTick');
+            set(gca,'XtickLabel',num2str(tmpx'))
+            
+            
+            
+            % add some text to the last plot
+            if mmm==length(lcall)
+                legend(num2str(1./lcall'))
+                drawnow
+                print('-dpsc',[figdir,filesep,'example_spectra_PWS_6bands.ps'])
+                
+            end
+            
+            
+        end
+        nt=nt+3;
+    end
+end
