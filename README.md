@@ -1,5 +1,5 @@
 # tilt-inversion-matlab
-Matlab codes for inversion of seismic data for moment tensors
+Matlab codes for inversion of seismic data for moment tensors. This is not really user friendly yet.
 
 These codes are based on work by Chouet, Dawson, Maeda, Ohminato, Takao, and Waite designed for inversion of seismic data fromv olcanoes for moment tensors.
 See:
