@@ -198,7 +198,7 @@ end
 %% start the loop over different lower corners
 % since we filter the data, it is easiest to do this outside the part where
 % the data is loaded.
-for locor=3%1:length(LCall)
+for locor=1:length(LCall)
     LC=LCall(locor);
     HC=HCall(locor);
     % load the data
@@ -324,15 +324,15 @@ for locor=3%1:length(LCall)
     %%% E2 0.4413   0.4303  0.4733  0.4789  0.3969
     %%% GF 23       23        23    218        145
     %     best_PWstack=[23,23,23,218,145];
-%     best_PWstack=[469 469 293 54 137];
-
-disp('results are from 22chaPWS_6moment_output_expandedZ__flippedrotx2016_04_08_16_20_49_2009PWS.mat')
-disp('and refined with Matozas gamma metric');
-best_PWstack=[459 190 82 45 103]; % this is from Matoza's gamma metric
-    for ng=best_PWstack(locor)
-        %%% otherwise, do all
-        %             disp(['inverting for ',num2str(size(allGFs,1)),' nodes'])
-        %       for ng=1:length(allGFs)
+    %     best_PWstack=[469 469 293 54 137];
+    
+    disp('results are from 22chaPWS_6moment_output_expandedZ__flippedrotx2016_04_08_16_20_49_2009PWS.mat')
+    disp('and refined with Matozas gamma metric');
+    % best_PWstack=[459 190 82 45 103]; % this is from Matoza's gamma metric
+    %     for ng=best_PWstack(locor)
+    %%% otherwise, do all
+    disp(['inverting for ',num2str(size(allGFs,1)),' nodes'])
+    for ng=1:length(allGFs)
         Gtd=zeros(length(inst)*3,length(allmom),512); Grottd=Gtd;
         G=zeros(length(inst)*3,length(allmom),fd);Grotuncorr=G; Grot=G;
         for nm=allmom
@@ -449,7 +449,7 @@ best_PWstack=[459 190 82 45 103]; % this is from Matoza's gamma metric
                 tmptd(1:length(tmp1),1)=flipud(tmp1);
                 
                 % filter these
-                [B,A]=butter(2,(1/6)/25,'low');
+%                 [B,A]=butter(2,(1/6)/25,'low');
                 tmptd=filtfilt(B,A,tmptd);
                 
                 Grottd(nc,nm,:)=tmptd(1:length(tmp1));
@@ -632,12 +632,12 @@ best_PWstack=[459 190 82 45 103]; % this is from Matoza's gamma metric
         %         angy=0.1:30:360; %
         %         angz=0.1:30:360;
         % compute these otuside of the script in checksymmetry.m
-% load('45degangvec.mat'); %takes about  0.5 hour with 223 gamma-delta pairs
-% load('30degangvec.mat'); %takes about 1.5 hours with 223 gamma-delta pairs
-% load('25degangvec.mat');%takes about 3.5 hours with 223 gamma-delta pairs
-% load('20degangvec.mat');%takes about 6 hours with 223 gamma-delta pairs
-load('15.0degangvec.mat');%takes about 13 hours with 223 gamma-delta pairs
-% load('10degangvec.mat');%takes about 46 hours with 223 gamma-delta pairs
+        % load('45degangvec.mat'); %takes about  0.5 hour with 223 gamma-delta pairs
+        % load('30degangvec.mat'); %takes about 1.5 hours with 223 gamma-delta pairs
+        % load('25degangvec.mat');%takes about 3.5 hours with 223 gamma-delta pairs
+        % load('20degangvec.mat');%takes about 6 hours with 223 gamma-delta pairs
+        load('15.0degangvec.mat');%takes about 13 hours with 223 gamma-delta pairs
+        % load('10degangvec.mat');%takes about 46 hours with 223 gamma-delta pairs
         %         disp(['Run will take ',num2str(totsec/86400),' days'])
         %fill these with large values, so if they get skipped, they won't
         %be have minima at zero
@@ -841,8 +841,8 @@ load('15.0degangvec.mat');%takes about 13 hours with 223 gamma-delta pairs
             
         end%end of loop for il (delta)
         
-%         E1all(locor,ng)=E1(ng);
-%         E2all(locor,ng)=E2(ng);
+        %         E1all(locor,ng)=E1(ng);
+        %         E2all(locor,ng)=E2(ng);
         
         if ~mod((100*ng/length(E1)),10)
             disp([num2str(100*ng/length(E1)),'% done with LC ',num2str(1/LC),' HC ',num2str(1/HC)])
@@ -1118,8 +1118,8 @@ int=griddata(gamma,delta,E2min,x,y,'linear');
 figure;imagesc(x(1,:),y(:,1),int);axis image
 colorbar
 axis xy
-    tittxt=sprintf('BP%d-%d PWS phi-theta-%d',1/LC,1/HC,dz);
-    lunefname=sprintf('LunePlotBP%d-%d_PWS_phi-theta-%d.ps',1/LC,1/HC,dz);
+tittxt=sprintf('BP%d-%d PWS phi-theta-%d',1/LC,1/HC,dz);
+lunefname=sprintf('LunePlotBP%d-%d_PWS_phi-theta-%d.ps',1/LC,1/HC,dz);
 
 title(tittxt)
 print('-dpsc',lunefname)
