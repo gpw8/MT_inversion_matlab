@@ -1,9 +1,16 @@
 % Invert VLP data from either 2009 or 2012 using fixed moment tensor. This
 % is designed for either a full grid search, or for use in Monte-Carlo
-% style inversion
+% style inversion. It is only designed to evaluate sources at a single
+% location. Use the code invVLPtiltdecon_vol.m to identify the best-fit
+% location. You may also want to evaluate the stability of the moment
+% tensor source time function to choose the source with both a stable
+% solution and low error. I used the code evalSTFstats.m to compute the
+% stability (Matoza's gamma metric) of all the solutions within 10% of the
+% minimum E2 value.
+
 %
-% This version properly accounts for tilt 11 April 2014
-% it is written for GFs with 60 channels. The first 30 channels are for the
+% This version properly accounts for tilt
+% It is written for GFs with 60 channels. The first 30 channels are for the
 % 10 stations in 2009 and the next 30 channels are for the 10 stations from
 % 2012.
 %    X     Y    name
@@ -30,19 +37,28 @@
 
 % In this code, the seismograms are not deconvolved. Instead the Green fcns
 % are convolved with the seismometer responses. This enables inclusion of
-% tilt data
+% tilt data following the method of Maeda et al. GJI, 2013. Note that all
+% the green functions were computed using the TOPO code (topo_v17_F09_20.f)
+% from Chouet and Dawson (see Ohminato and Chouet, BSSA 1998). They were
+% then converted from time-domain to frequency domain using the code
+% fdm2greenft.f These files have complex spectra for each station shown
+% above in order following a single header line that gives sample rate,
+% number of points, etc.
+%%
 
 clear
 close all
 
-%Add directory where functions to convert from lune to moment tensors and viceversa are
-%stored
-%addpath('/scratch/fede/Pacaya2013/compearth/momenttensor/matlab/')
+% Add directory where functions to convert from lune to moment tensors and
+% vice versa are stored. These are from Carl Tape
 addpath('~/prgs/misc_matlab/compearth/momenttensor/matlab/')
 
+% These are predifined filter bands used to explore the affect of tilt on
+% the solutions. Most go from 10 seconds down (VLP band), but one is from
+% 400 to 60 seconds, below the corner of all the stations used in 2009
 %high corner of filter
 HCall=[1/60, .1 .1 .1 .1 .1];
-% decide with low corner filter to use. These 4 are a good sample
+% decide with low corner filter to use. These are a good sample
 LCall=1./[400 400 120  60  30 90];
 tp=0.5; %disp(['using tp = ',num2str(tp)]);
 
@@ -52,7 +68,7 @@ year_flag=2009;
 %2009
 stasub=[1:3,6:8];
 
-%choose event 1, 2, or 3
+%choose event 1, 2, or 3, or the phase-weighted stacks (event 4)
 event=4;
 eventfile=cell(5,1);
 if event==1
@@ -90,12 +106,13 @@ dataend = datastart+20/(24*60);
 
 plot_flag=0; % use plot_flag=2 for more plots, incl. the GFs. This is for testing only
 usetilt = 1;
+
+% if this is 1, STF.dat files will be written at each step
 outputfiles_flag=0;
 
-ratmult=1;
-% factor to scale the tilt gfs to something closer to the trans gfs
-
-nummom=6; % this does not work yet for forces only
+% choose 6 for moment components, 3 for single forces, or 9 for moment plus
+% forces - ONLY TESTED with nummom=6;
+nummom=6;
 
 % This is the directory where the GFs are located. They are in individual
 % directories labeled with node x-y-z (like 117-099-122) and labeled like
@@ -111,45 +128,32 @@ nummom=6; % this does not work yet for forces only
 %
 %  end
 load('allGFdirectories.mat')
-rootdir=pwd;
+% rootdir=pwd;
 rootdir='/Users/gpwaite/Data/Guate/Fuego2012/FuegoVLP2012/fdmtilt';
 
 %make sure the data are consistent with padded GFs
 td=2^15;
 fd=td/2;
 
-% use this for td=16383
-smallwinstart=16162;
-smallwinend = 48929;
-
+% this simply trims off the ends of the seismograms and synthetics for
+% error calculations
 timetrim=[10,645];
 
 % 2012
 %stasub=[11:15,17:20];
 
-% determine weighting here
+% determine weighting here in order to downweight or effectively eliminate
+% some channels
 
-% 27 weight (everything except N1)
+% 27 weight
 weight=ones(1,27);
 
 
 % 21cha
 if strcmp(chnwgtstr,'17cha')
     weight=ones(1,18);
-    weightrot=ones(1,18);
     weight(13)=1e-20;
     weight(14)=1e-20;
-    
-    weightrot(13)=1e-20;
-    weightrot(14)=1e-20;
-    
-    % all the z compoents of tilt shoudl be zero
-    %     weightrot(3)=1e-20;
-    %     weightrot(6)=1e-20;
-    %     weightrot(9)=1e-20;
-    %     weightrot(12)=1e-20;
-    %     weightrot(15)=1e-20;
-    %     weightrot(18)=1e-20;
     
     % 23cha
 elseif strcmp(chnwgtstr,'23cha')
@@ -170,8 +174,6 @@ elseif strcmp(chnwgtstr,'22chaPWS')
     
     % what if we throw out NE Z, which is crazy
     weight(21)=1e-20;
-    
-    weightrot=weight;
     
 else
     error([chnwgtstr,' does not match anything'])
@@ -230,7 +232,6 @@ for locor=1:length(LCall)
     % load the seismograms - raw w/o any deconvolution
     load(char(eventfile(locor)))
     sps=50;
-    combdatatd=datatd;
     
     
     % stations are in this order for the regular for 2012
@@ -294,7 +295,6 @@ for locor=1:length(LCall)
     %         end
     %     end
     
-    %allGFdirs=dir([rootdir,'/121-111-134']);
     
     allGFs=allGFdirs;
     
@@ -314,27 +314,15 @@ for locor=1:length(LCall)
     elseif nummom==3
         allmom=7:9;
     end
-    %E1=zeros(1,length(allGFs));
-    %E2=E1;
     
-    %%% if you only want to compute a single solution
-    %     best_504_LC4=[264,271,215,208]; % these are the best fits for each of the 4 bands
     
-    %%% best locations for the PWSs,
-    %%% LC 1/400    1/400   1/120   1/60    1/30
-    %%% HC 1/60     1/10    1/10    1/10    1/10
-    %%% E2 0.4413   0.4303  0.4733  0.4789  0.3969
-    %%% GF 23       23        23    218        145
-    %     best_PWstack=[23,23,23,218,145];
-    %     best_PWstack=[469 469 293 54 137];
-    
-    disp('results are from 22chaPWS_6moment_output_expandedZ__flippedrotx2016_04_08_16_20_49_2009PWS.mat')
+    disp('results are from 22chaPWS_6moment_output_nofilt__flippedrotx2016_04_25_21_35_11_2009PWS.mat')
     disp('and refined with Matozas gamma metric');
-    % best_PWstack=[459 190 82 45 103]; % this is from Matoza's gamma metric
-    %     for ng=best_PWstack(locor)
-    %%% otherwise, do all
-    disp(['inverting for ',num2str(size(allGFs,1)),' nodes'])
-    for ng=1:length(allGFs)
+    best_PWstack=[461,190,190,190,103,487];
+    for ng=best_PWstack(locor)
+        %%% otherwise, do all
+        %     disp(['inverting for ',num2str(size(allGFs,1)),' nodes'])
+        %     for ng=1:length(allGFs)
         Gtd=zeros(length(inst)*3,length(allmom),512); Grottd=Gtd;
         G=zeros(length(inst)*3,length(allmom),fd);Grotuncorr=G; Grot=G;
         for nm=allmom
@@ -443,16 +431,9 @@ for locor=1:length(LCall)
                 % these synthetics are the curl of the displacement, we need to
                 % divide by 2 to get to rotation in radians
                 tmp1=tmp1/2;
-                %             tmp1=1e6*tmp1/2;
-                %             % multiply the tilt GFs by a scale factor
-                %             tmp1=tmp1*ratmult*scalarmomentnormfac;
                 
                 tmptd=zeros(td,1);
                 tmptd(1:length(tmp1),1)=flipud(tmp1);
-                
-                % filter these
-%                 [B,A]=butter(2,(1/6)/25,'low');
-%                 tmptd=filtfilt(B,A,tmptd);
                 
                 Grottd(nc,nm,:)=tmptd(1:length(tmp1));
                 if plot_flag==2
@@ -801,12 +782,8 @@ for locor=1:length(LCall)
                 end
                 
                 sysub=synthtd(:,tts(1):tts(2));
-                if usetilt
-                    %  dasub=[datatd(:,tts(1):tts(2))+datatdt(:,tts(1):tts(2))];
-                    dasub= combdatatd(:,tts(1):tts(2));
-                else
                     dasub= datatd(:,tts(1):tts(2));
-                end
+                
                 num1=zeros(1,21);
                 num2=zeros(1,3);
                 den1=zeros(1,21);
@@ -820,16 +797,12 @@ for locor=1:length(LCall)
                         den1(nt)=sum( dasub(nt,:).^2 );
                         den2(nc)=sum( dasub(nt,:).^2 );
                         
-                        %  err3(nt)=mean((dasub(nt,:) - sysub(nt,:)).^2 * weight(nt));
                     end
                     E2tmp(ns)=sum(num2)/sum(den2);
                 end
                 
-                % E3(k,nk)=sqrt(mean(err3));
                 E1(zk)=sum(num1)/sum(den1);
-                % E1(ng)=sum(num1)/sum(den1);
                 E2(zk)=sum(E2tmp)/length(stasub);
-                %E2(ng)=sum(E2tmp)/length(sta);
                 
             end %end of loop of ang (zk)
             elapsedtime=toc;
@@ -862,33 +835,13 @@ for locor=1:length(LCall)
                 fprintf(fid,'%f\n',mtd(nm,:));
             end
             fclose(fid);
-            %         stfdir=sprintf('%s/%s',rootdir,allGFs(ng).name);
+
         end
         
     end
-    % if usetilt && 0
-    %     ratiotilttransdata=max(max(abs(datarot')))/max(max(abs(data')))
-    %     ratiotilttransGF=max(max(max(abs(Grot))))/max(max(max(abs(G))))
-    %     ratiotilttransGF=max(max(max(abs(Grotorig))))/max(max(max(abs(Gorig))))
-    % end
-    %
-    %     [~,bbb]=find(E1>0);
-    %     [a,b]=min(E1(bbb));
-    %     disp(['min E1 at ',allGFs(bbb(b)).name,' of ',num2str(a)]);
-    %     disp(['x=',num2str(40*str2double(allGFs(bbb(b)).name(1:3))),' y=',num2str(40*str2double(allGFs(bbb(b)).name(5:7)))])
-    %
-    %     [~,bbb]=find(E2>0);
-    %     [a,b]=min(E2(bbb));
-    %     disp(['min E2 at ',allGFs(bbb(b)).name,' of ',num2str(a)]);
-    %     disp(['x=',num2str(40*str2double(allGFs(bbb(b)).name(1:3))),' y=',num2str(40*str2double(allGFs(bbb(b)).name(5:7)))])
-    %
-    %     disp('the best fit VLP source from Lyons and Waite, 2011 is 119-107-134')
-    %
     % save some output
     dte = datestr(now,'yyyy_mm_dd_HH_MM_SS');
-    %savefile=sprintf('%s_%dmoment_output_expandedZ_%s.mat',chnwgtstr,nummom,dte);
     
-    % savefile=sprintf('%s_%dmoment_lune_%s.mat',chnwgtstr,nummom,dte);
     savefile=sprintf('Full_lune_output_%d_%d_PWS_%s.mat',1/LC,1/HC,dte);
     
     save(savefile,'allGFs','E1min','E2min','storeE1','storeE2','LC','HC','gamma','delta','ang');
@@ -923,33 +876,6 @@ if plot_flag
 end
 stfdir=sprintf('%s/%s',rootdir,allGFs(ng).name);
 
-%     if 0
-%         %     file=sprintf('%s/%s/STF.dat',rootdir,allGFs(ng).name);
-%         stfoutfile=sprintf('%s/%s/STF_%03d.dat',rootdir,allGFs(ng).name,round(1/LC));
-%
-%         fid=fopen(stfoutfile,'w');
-%         fprintf(fid,'%d %d %f %d',td,size(m,1),dt,fd);
-%         for nm=1:size(m,1)
-%             tmpm=zeros(1,td);
-%             tmpm(1:fd)=m(nm,:);
-%             mtd(nm,:)=ifft(tmpm,'symmetric');
-%             fprintf(fid,'%f\n',mtd(nm,:));
-%         end
-%         fclose(fid);
-%     end
-% %%
-% figure
-% tvec=(0:td-1)*dt;
-% j=0;
-% for ns=1:length(sta)
-%     for nc=1:length(cha)
-%         nt=(ns-1)*3+nc;
-%         j=j+1;
-%         ht(j)=subplot(ns+1,3,nt);
-%         plot(tvec,datatd(nt,:)); hold on
-%         plot(tvec,synthtd(nt,:),'r--')
-%     end
-% end
 
 %% plot residuals
 if plot_flag
@@ -961,12 +887,12 @@ if plot_flag
     %     end
     if usetilt
         
-        plotresiduals(combdatatd,synthtd(1:18,:),weight,sta,tit,270,380,1/sps,0);
+        plotresiduals(datatd,synthtd(1:18,:),weight,sta,tit,270,380,1/sps,0);
         print('-dpsc',['res_vel',num2str(sum(weight)),'cha_',num2str(round(1/LC)),'s_',allGFs(ng).name,'.ps'])
         
         %integrate the data
-        for nt=1:size(combdatatd,1)
-            intdatatd(nt,:) =cumtrapz(combdatatd(nt,:))/50;
+        for nt=1:size(datatd,1)
+            intdatatd(nt,:) =cumtrapz(datatd(nt,:))/50;
             intsynthtd(nt,:)=cumtrapz(synthtd(nt,:))/50;
         end
         plotresiduals(intdatatd,intsynthtd,weight,sta,tit,1,655,1/sps,0);
@@ -989,131 +915,11 @@ if plot_flag
 end
 
 
-%% plot error volumes
-
-
-clear tmp
-if 0
-    for ng=1:length(E2)
-        x(ng)=str2double(allGFs(ng).name(1:3));
-        y(ng)=str2double(allGFs(ng).name(5:7));
-        z(ng)=str2double(allGFs(ng).name(9:11));
-    end
-    xmin=min(x);
-    ymin=min(y);
-    zmin=min(z);
-    xmax=max(x);
-    ymax=max(y);
-    zmax=max(z);
-    
-    for n=1:length(E2)
-        xi=x(n)-xmin+1;
-        yi=y(n)-ymin+1;
-        zi=z(n)-zmin+1;
-        v(xi,yi,zi)=E2(n);
-    end
-    
-    xs=xmin:xmax;
-    ys=ymin:ymax;
-    zs=zmin:zmax;
-    [xnew,ynew,znew]=meshgrid(ys,xs,zs);
-    vi=interp3(ys,xs,zs,v,xnew,ynew,znew);
-    
-    for n=1:size(vi,3)
-        
-        tmp(:,:)=vi(:,:,n);
-        
-        for i=1:size(tmp,1)
-            for j=1:size(tmp,2)
-                if tmp(i,j)==0, tmp(i,j)=NaN;
-                end
-            end
-        end
-        map1=jet;
-        map1(1,:)=[0 0 0];
-        figure
-        imagesc(xs,ys,tmp',[min(E2) max(E2)])
-        
-        %transfer the original so xs is columns, ys is rows
-        vinew(:,:,n)=tmp';
-        
-        axis equal
-        axis tight
-        axis xy
-        colormap(map1)
-        colorbar('SouthOutside')
-        title(['layer at z = ',num2str(zs(n)),'  layer min = ',num2str(min(min(tmp)))])
-        
-    end
-    
-    
-end
-
-
-
-% For 21cha6M, between 130 and 135, the error space is well-defined,
-% roughly in themiddle of the search volume.
-
-%% try smoothing and plotting a subset
-%
-% [nx,ny,nz,vsub]=subvolume(vi,[3,12,3,19,21,27]);
-% nx=nx+ys(1)-1;
-% ny=ny+xs(1)-1;
-% nz=nz+zs(1)-1;
-if 0
-    [nx,ny,nz,vsub]=subvolume(vinew,[3,19,3,12,21,27]);
-    nx=nx+xs(1)-1;
-    ny=ny+ys(1)-1;
-    nz=nz+zs(1)-1;
-    
-    vs=smooth3(vsub);
-    
-    % xs(3:19),ys(3:12),zs(20:27),
-    isolevel=0.43;
-    figure
-    patch(isocaps(vs,isolevel,'below'),'FaceColor','interp','EdgeColor','none');
-    p1 = patch(isosurface(nx,ny,nz,vs,isolevel),'FaceColor','blue','EdgeColor','none');
-    isonormals(vs,p1)
-    axis equal
-    view(3);
-    axis vis3d
-    grid on
-    camlight left;
-    lighting phong
-    
-end
-
-%%
-if usetilt && 0
-    for nt=1:3:18
-        figure
-        for nc=0:2
-            tmp=zeros(1,td);
-            tmp(1:fd)=combdata(nt+nc,:);
-            tmptd=ifft(tmp,'symmetric');
-            tvec=(0:td-1)/50;
-            figure(10)
-            subplot(3,1,(1+nc))
-            
-            plot(tvec,tmptd,tvec,combdatatd(nt+nc,:))
-            figure(11)
-            subplot(3,1,(1+nc))
-            
-            plot(tvec,cumtrapz(tmptd)/50,tvec,cumtrapz(combdatatd(nt+nc,:))/50)
-        end
-        figure(10)
-        suptitle2(sta{(nt-1)/3+1})
-        figure(11)
-        suptitle2(sta{(nt-1)/3+1})
-        drawnow
-        pause
-    end
-end
 
 %%
 a1=cell2mat(ang(1));
 a2=cell2mat(ang(2));
-dz=a2(3)-a1(3)
+dz=a2(3)-a1(3);
 sorted=sortrows([gamma,delta,E2min]);
 [x,y]=meshgrid(-30:1:30,0:1.5:90);
 int=griddata(gamma,delta,E2min,x,y,'linear');
