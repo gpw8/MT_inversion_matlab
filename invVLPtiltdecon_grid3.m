@@ -112,6 +112,8 @@ nummom=6; % this does not work yet for forces only
 %  end
 load('allGFdirectories.mat')
 rootdir=pwd;
+rootdir='/Users/gpwaite/Data/Guate/Fuego2012/FuegoVLP2012/fdmtilt';
+
 %make sure the data are consistent with padded GFs
 td=2^15;
 fd=td/2;
@@ -450,7 +452,7 @@ for locor=1:length(LCall)
                 
                 % filter these
 %                 [B,A]=butter(2,(1/6)/25,'low');
-                tmptd=filtfilt(B,A,tmptd);
+%                 tmptd=filtfilt(B,A,tmptd);
                 
                 Grottd(nc,nm,:)=tmptd(1:length(tmp1));
                 if plot_flag==2
