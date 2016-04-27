@@ -1,8 +1,9 @@
 # tilt-inversion-matlab
 Matlab codes for inversion of seismic data for moment tensors. This is not really user friendly yet.
 
-These codes are based on work by Chouet, Dawson, Maeda, Ohminato, Takao, and Waite designed for inversion of seismic data fromv olcanoes for moment tensors.
-See:
+These codes are based on work by Chouet, Dawson, Maeda, Ohminato, Takao, and Waite designed for inversion of seismic data from volcanoes for moment tensors. There are calls to some homegrown functions, functions that are part of Carl Tape's compearth package (https://github.com/carltape/compearth) and modified from Ken Creager's CORAL package.
+
+For more on the inversion, please see:
 
 Chouet, B., P. Dawson, T. Ohminato, M. Martini, G. Saccorotti, F. Giudicepietro, G. De Luca, G. Milana, and R. Scarpa (2003), Source mechanisms of explosions at Stromboli Volcano, Italy, determined from moment-tensor inversions of very-long-period data, J. Geophys. Res., 108(B1), 2019, doi:10.1029/2002JB001919.
 
