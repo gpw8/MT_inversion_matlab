@@ -522,7 +522,7 @@ for locor=1:length(LCall)
         clear tmpG
         if usetilt
             % create the tilt transfer function
-            fvecfd=linspace(0,sps,fd);
+            fvecfd=linspace(0,sps/2,fd); % this only goes to Nyquist
             constant=-9.8./(2*pi*fvecfd).^2;
             constant(1)=-1e-9;
             for ncha=1:size(transtransmat,1)
